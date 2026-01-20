@@ -55,10 +55,10 @@ INSTALLED_APPS = [
     # 'channels',
     'notifications',
     'corsheaders',
-    'django_otp',
+    #'django_otp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
-    'two_factor',
+    # 'two_factor',
     'two_factor.plugins.phonenumber',
     'rest_framework',
     'pigeon',
@@ -66,7 +66,7 @@ INSTALLED_APPS = [
 
 # ASGI_APPLICATION = 'pigeon.asgi.application'
 
-CHANNEL_LAYERS = {
+# CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
