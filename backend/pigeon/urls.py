@@ -68,7 +68,7 @@ urlpatterns = [
     
     # Дополнительные маршруты
     path('users/', include('users.urls')),
-    path('account/', include(tf_urls)),
+    # path('account/', include(tf_urls)),
     path('health/', health_check, name='health_check'),
     
     # WebSocket маршруты (обновлены для работы с conversation_id)
