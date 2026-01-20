@@ -67,7 +67,7 @@ INSTALLED_APPS = [
 # ASGI_APPLICATION = 'pigeon.asgi.application'
 
 # CHANNEL_LAYERS = {
-    "default": {
+ "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [(env('REDIS_HOST', default='127.0.0.1'), env.int('REDIS_PORT', default=6379))],
