@@ -34,7 +34,6 @@ from .views import (
     user_dashboard,
     get_messages,
     handler404,
-    handler500,
     health_check
 )
 import messenger.routing
