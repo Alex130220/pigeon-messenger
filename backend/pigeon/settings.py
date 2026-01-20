@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import environ
+import os
+
 env = environ.Env()
 environ.Env.read_env()
 
@@ -26,16 +28,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-q2%y#+z%-m5c*!&t%73twmvttt7x86!1)#w3_356k4nbhe_1)v')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
+
+ALLOWED_HOSTS = []
 
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pigeon']
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', 'pigeon'])
 else:
-    ALLOWED_HOSTS = ['pigeon.com', 'www.pigeon.com']
+    ALLOWED_HOSTS.extend(['pigeon.com', 'www.pigeon.com'])
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
 
 # Application definition
 
@@ -67,7 +70,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [(env('REDIS_HOST', default='127.0.0.1'), env.int('REDIS_PORT', default=6379))],
             "channel_capacity": {
                 "http.request": 200,
                 "http.response!*": 100,
@@ -78,6 +81,7 @@ CHANNEL_LAYERS = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -94,7 +98,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://pigeon:8000",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS is dangerous in production - only use in development
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -119,6 +124,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'templates',
+            BASE_DIR / 'frontend/build',  # For React build files
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -151,7 +157,6 @@ DATABASES = {
         'PORT': env('DB_PORT', default='5432'),
         'OPTIONS': {
             'client_encoding': 'UTF8',
-            'options': '-c lc_messages=en_US.UTF-8',
         },
     }
 }
@@ -200,7 +205,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' 
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -216,9 +221,16 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -230,36 +242,55 @@ LOGGING = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": f"redis://{env('REDIS_HOST', default='127.0.0.1')}:{env.int('REDIS_PORT', default=6379)}/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
 
-LOGIN_URL = 'login' 
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = '/'
 CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = []
+
+if not DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://pigeon.com',
+        'https://www.pigeon.com',
+    ]
 
 # Для хранения сессий
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_HTTPONLY = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.yourmailserver.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your@email.com'
-EMAIL_HOST_PASSWORD = 'yourpassword'
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
+
+# Rest Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 # Render.com specific
-import dj_database_url
-import os
-
 if 'RENDER' in os.environ:
-    DEBUG = False
-    ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+    import dj_database_url
+    
+    DEBUG = env.bool('DEBUG', default=False)
+    ALLOWED_HOSTS.extend(['.onrender.com', 'localhost', '127.0.0.1'])
     
     DATABASES = {
         'default': dj_database_url.config(
@@ -271,4 +302,10 @@ if 'RENDER' in os.environ:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    # Добавляем Render.com домен в доверенные CSRF origins
+    render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if render_external_hostname:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{render_external_hostname}')
+    
+    # Email settings for production
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
