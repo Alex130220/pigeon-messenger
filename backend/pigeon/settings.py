@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
     'messenger.apps.MessengerConfig',
-    'channels',
+    # 'channels',
     'notifications',
     'corsheaders',
     'django_otp',
@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'pigeon',
 ]
 
-ASGI_APPLICATION = 'pigeon.asgi.application'
+# ASGI_APPLICATION = 'pigeon.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
