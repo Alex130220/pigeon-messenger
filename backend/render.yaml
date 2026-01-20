@@ -2,18 +2,28 @@ services:
   - type: web
     name: pigeon-backend
     env: python
+    region: frankfurt  # или oregon, singapore
+    plan: free         # бесплатный план
+    branch: main       # ветка GitHub
+    
+    # Команды сборки
     buildCommand: |
+      pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
+    
+    # Команда запуска
     startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
+    
+    # Переменные окружения (ДОБАВИТЬ ПОСЛЕ СОЗДАНИЯ!)
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: pigeon-db
-          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: pigeon.settings
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true  # Render сам создаст
       - key: DEBUG
-        value: false
+        value: "False"
       - key: ALLOWED_HOSTS
-        value: ".onrender.com,localhost,127.0.0.1"
+        value: ".onrender.com"
