@@ -25,3 +25,6 @@ Pillow==10.3.0
 django-environ==0.11.2
 django-redis==5.4.0
 redis==5.0.1
+django-otp==1.6.3
+django-two-factor-auth==1.15.1
+phonenumbers==8.13.35
