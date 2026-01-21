@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import environ
+env = environ.Env()
+environ.Env.read_env()
 import os
 
 env = environ.Env()
@@ -52,19 +54,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
     'messenger.apps.MessengerConfig',
-    # 'channels',
+    'channels',
     'notifications',
     'corsheaders',
-    # 'django_otp',
-    # 'django_otp.plugins.otp_static',
-    # 'django_otp.plugins.otp_totp',
-    # 'two_factor',
-    # 'two_factor.plugins.phonenumber',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
+    'two_factor.plugins.phonenumber',
     'rest_framework',
     'pigeon',
 ]
 
-# ASGI_APPLICATION = 'pigeon.asgi.application'
+ASGI_APPLICATION = 'pigeon.asgi.application'
 
 CHANNEL_LAYERS = {
   "default": {

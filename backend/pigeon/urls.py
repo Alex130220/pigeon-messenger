@@ -24,6 +24,7 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
+from two_factor.urls import urlpatterns as tf_urls
 from .views import (
     home_view,
     about_view,
@@ -66,7 +67,7 @@ urlpatterns = [
     
     # Дополнительные маршруты
     path('users/', include('users.urls')),
-    # path('account/', include(tf_urls)),
+    path('account/', include(tf_urls)),
     path('health/', health_check, name='health_check'),
     
     # WebSocket маршруты (обновлены для работы с conversation_id)
